@@ -1,6 +1,6 @@
 .DS_Store
 node_modules
-/dist
+/pigeon-flow-form
 
 # local env files
 .env.local
