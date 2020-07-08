@@ -34,35 +34,24 @@ module.exports = {
       .set("utils", resolve("src/utils"))
       .set("api", resolve("src/api"));
   },
-  configureWebpack: (config) => {
-    //警告 webpack 的性能提示 关闭文件大小的警告
-    config.performance = {
-      hints: false
-    };
-    config.optimization = {
-      splitChunks: {
-        chunks: "all", // 同步 异步 都采用代码分割
-        minSize: 30000, // 30kib 引入的库大于 30000  才会做代码分割
-        minChunks: 1, // 当某个模块至少被引用1次时，才做代码分割
-        maxAsyncRequests: 5, // 同时加载模块的个数
-        maxInitialRequests: 3, //首页入口文件 最多同时加载3个
-        automaticNameDelimiter: "~", // 连接符
-        name: true,
-        cacheGroups: {
-          // 同步代码继续执行
-          vendors: {
-            test: /[\\/]node_modules[\\/]/, // 同步 引入的库是否在 node_modules中
-            priority: -10 // 值越大，优先级就越高
-            // filename: 'vendors.js' // 放开报错，原因未知
-          },
-          default: {
-            priority: -20,
-            reuseExistingChunk: true // 当一个模块之前引用过，再次使用时可以直接复用
-            // filename: 'common.js'
-          }
-        }
+  configureWebpack: {
+    resolve: {
+      alias: {
+        "@": path.resolve(__dirname, "src")
       }
-    };
+    },
+    externals: {
+      "element-ui": "ELEMENT",
+      vue: "Vue"
+    },
+    output: {
+      // 微应用的包名，这里与主应用中注册的微应用名称一致
+      library: "VueMicroApp",
+      // 将你的 library 暴露为所有的模块定义下都可运行的方式
+      libraryTarget: "umd",
+      // 按需加载相关，设置为 webpackJsonp_VueMicroApp 即可
+      jsonpFunction: `webpackJsonp_VueMicroApp`
+    }
   },
   // node_modules 下babel转义
   // transpileDependencies: [],
@@ -70,6 +59,11 @@ module.exports = {
   productionSourceMap: false,
   // 这里写你调用接口的基础路径，来解决跨域，如果设置了代理，那你本地开发环境的axios的baseUrl要写为 '' ，即空字符串
   devServer: {
-    // proxy: 'http://localhost:9527'
+    // 关闭主机检查，使微应用可以被 fetch
+    disableHostCheck: true,
+    // 配置跨域请求头，解决开发环境的跨域问题
+    headers: {
+      "Access-Control-Allow-Origin": "*"
+    }
   }
 };

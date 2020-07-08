@@ -156,23 +156,25 @@
   </div>
 </template>
 <script>
-let vm;
-// 接收信息 postMessage通信
-onmessage = function(e) {
-  e = e || event;
-  let res = e.data;
-  console.log(res);
-  switch (res) {
-    case "submit":
-      vm.submit();
-      break;
-    case "detal":
-      vm.getDetal();
-  }
-};
+// let vm;
+// // 接收信息 postMessage通信
+// onmessage = function(e) {
+//   e = e || event;
+//   let res = e.data;
+//   console.log(res);
+//   switch (res) {
+//     case "submit":
+//       vm.submit();
+//       break;
+//     case "detal":
+//       vm.getDetal();
+//   }
+// };
+// 引入 actions 实例
+import actions from "@/shared/actions";
 export default {
   data() {
-    vm = this;
+    // vm = this;
     return {
       urlData: {},
       isDisable: false,
@@ -200,6 +202,28 @@ export default {
     };
   },
   mounted() {
+    console.log("我是嵌套表单子页面");
+    // 添加观察者
+    // onGlobalStateChange 第二个入参为 true，代表立即执行一次观察者函数
+    actions.onGlobalStateChange((state) => {
+      console.log("收到父页面的值" + state.flag);
+      if (state.flag == "subit") {
+        this._test();
+      } else if (state.flag == "detal") {
+        console.log(state.detalData);
+        this.getDetal(state.detalData);
+      }
+      // const {token} = state;
+      // console.log("========" + token);
+      // 未登录 - 返回主页
+      // if (!token) {
+      //   this.$message.error("未检测到登录信息！");
+      //   return this.$router.push("/");
+      // }
+      // // 获取用户信息
+      // this.getUserInfo(token);
+    }, true);
+
     // this.$nextTick(() => {
     // var self = this;
     // window.addEventListener("message", function(e) {
@@ -220,22 +244,43 @@ export default {
     //   }
     // }, false);
     // });
+    // let _this = this;
+    // var beginTime = 0; //执行onbeforeunload的开始时间
+    // var differTime = 0; //时间差
+    // window.onunload = function() {
+    //   differTime = new Date().getTime() - beginTime;
+    //   if (differTime <= 3) {
+    //     // 关闭
+    //   } else {
+    //     // 刷新
+
+    //     console.log("刷新页面");
+    //     // debugger;
+    //     // _this.parentData.parentRouter("/test");
+    //     // _this.$router.go(-1);
+    //     // window.sessionStorage.removeItem('keyFlag');
+    //   }
+    // };
+    // window.onbeforeunload = function() {
+    //   beginTime = new Date().getTime();
+    // };
   },
   methods: {
     // 获取详情
-    getDetal() {
+    getDetal(data) {
       console.log("===============详情==============");
-      this.urlData = this.getUrlData();
-      if (this.urlData.isable == "false") {
+      // this.urlData = this.getUrlData();
+      console.log(data);
+      if (data.isable == "false") {
         this.isDisable = false;
       } else {
         this.isDisable = true;
       }
-      // if(this.urlData.nodeId) {
+      // if(data.nodeId) {
 
       // }
-      if (this.urlData.busId) {
-        this.$api.process.getTaskDetal({busId: this.urlData.busId}).then((res) => {
+      if (data.busId) {
+        this.$api.process.getTaskDetal({busId: data.busId}).then((res) => {
           if (res && res.code == 200) {
             this.baseForm = JSON.parse(res.data.data);
             console.log(this.baseForm);
@@ -259,6 +304,11 @@ export default {
       }
       return urlData;
     },
+    _test() {
+      this.baseForm.timeLong = Number(this.baseForm.timeLong);
+      let data = this.baseForm;
+      actions.setGlobalState({flag: null, flagData: data});
+    },
     // 表单提交
     submit() {
       this.baseForm.timeLong = Number(this.baseForm.timeLong);
@@ -280,6 +330,10 @@ export default {
       //     }
       //   });
     }
+  },
+  destroyed() {
+    // window.onbeforeunload = null;
+    // window.onunload = null;
   },
   beforeDestroy() {}
 };
